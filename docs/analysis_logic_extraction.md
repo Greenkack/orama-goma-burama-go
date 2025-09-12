@@ -75,6 +75,32 @@ Inputs/Outputs (Kontrakt, gekürzt):
 
 Fehlerinvarianten: Fehlende Keys werden robust behandelt (Fallbacks/0), UI zeigt Hinweise statt Exceptions.
 
+### Vollständiger Funktionskatalog (Aus `analysis.py`)
+
+- Entry-Points
+  - `render_analysis` (klassisch) und „moderne“ Variante (zweite Definition)
+  - `render_pricing_modifications_ui` (2 Varianten)
+- Chart Core
+  - `create_universal_2d_chart`, `create_multi_series_2d_chart`, `_create_chart_by_type`, `_apply_shadcn_like_theme`, `_apply_custom_style_to_fig`, `_export_plotly_fig_to_bytes`
+- Chart Switcher (Renderer)
+  - `render_daily_production_switcher`, `render_weekly_production_switcher`, `render_yearly_production_switcher`
+  - `render_production_vs_consumption_switcher`, `render_selfuse_stack_switcher`, `render_selfuse_ratio_switcher`
+  - `render_storage_effect_switcher`, `render_cost_growth_switcher`, `render_roi_comparison_switcher`
+  - `render_scenario_comparison_switcher`, `render_tariff_comparison_switcher`, `render_tariff_cube_switcher`
+  - `render_income_projection_switcher`, `render_co2_savings_value_switcher` (2 Varianten)
+  - Pie-Helpers: `_create_coverage_pie_chart`, `_create_pv_usage_pie_chart`
+- Advanced/Erweitert
+  - `integrate_advanced_calculations`, `render_extended_calculations_dashboard`
+  - `render_advanced_calculations_section`, `render_advanced_financial_analysis`, `render_advanced_energy_analysis`, `render_advanced_environmental_analysis`, `render_advanced_technical_analysis`, `render_advanced_comparison_analysis`
+  - `prepare_advanced_calculations_for_pdf_export`
+- Finanzierung
+  - `render_financing_analysis` (inkl. Tilgungs-/Leasingplänen, Zinssensitivität, ROI, Steuer)
+  - `prepare_financing_data_for_pdf_export`, `get_financing_data_summary`
+- Utilities
+  - `format_kpi_value`, `get_text`, `load_viz_settings`/`_get_visualization_settings`, `get_pricing_modifications_data`
+
+Hinweis: Optional importierte Modern-/Enhancement-Module (z. B. `enhanced_analysis_charts`, `modern_dashboard_ui`) werden bei Abwesenheit über Fallback-Pfade abgefangen.
+
 ## Erweiterte Berechnungen und Abschnitte
 
 
@@ -110,6 +136,92 @@ PDF-Export-Vorbereitung:
   - LCOE, NPV@4%, IRR, CO2, Temperatur, WR-Wirkungsgrad, Recycling, Optimierungen
   - `extended_summary` mit konsolidierten KPIs
   - Speicherung unter `st.session_state["advanced_calculation_results"]`
+
+### Detaillierte Kontrakte (Inputs/Outputs/Side-Effects)
+
+- `render_pricing_modifications_ui(project_data, results, texts)`
+  - Inputs: `results.total_investment_netto/brutto` (Basis), Texte, ggf. Session-State-Vorbelegung
+  - Outputs: aktualisierte `st.session_state["live_pricing_calculations"]` mit `base_cost`, `total_rabatte_nachlaesse`, `total_aufpreise_zuschlaege`, `final_price`
+  - Side-Effects: UI-Interaktionen (Slider/Inputs), Recalc-Trigger-Flag setzen
+- `create_universal_2d_chart(series, ...)`
+  - Inputs: `pandas.DataFrame`/Liste, X/Y-Spaltennamen, Typ, Palette, Titel
+  - Outputs: Plotly-Figur; optional Speicherung als Bytes über `_export_plotly_fig_to_bytes`
+  - Fehler: Leere Daten → Hinweis statt Exception; falsche Spaltennamen → defensive Checks
+- `render_*_switcher(results, texts)`
+  - Inputs: benötigte KPI-Keys je Switcher (siehe Matrix unten)
+  - Outputs: Anzeige Plotly-Chart; optional Bytes im Session-State für PDF
+  - Fehler: Fehlende Keys → Fallback 0/Warnungen; Charts werden übersprungen
+- `prepare_advanced_calculations_for_pdf_export(calc_results, project_data, texts)`
+  - Inputs: Ergebnisse/Projekt; Verfügbarkeit Integrator-Methoden
+  - Outputs: `advanced_calculation_results` inkl. `extended_summary`
+  - Fehler: Einzelmethoden im Try/Except; Warnungen statt Abbruch
+- `render_financing_analysis(results, texts)`
+  - Inputs: Finanzierungssumme, Zinssatz, Laufzeit, Leasingfaktor, PV-Erträge
+  - Outputs: Tilgungs-/Leasingtabellen, Zinssensitivitäts-Charts, ROI-/Cashflow-Charts, Steuer-Metriken; Speicherung unter `financing_*`
+  - Fehler: Negative/Nullwerte → Abfangen; Tabellen robust; Szenario-Listen nur bei gültigen Daten
+
+### Switcher → Datenbedarf (Kurz-Matrix)
+
+- Daily/Weekly/Yearly Production: `annual_pv_production_kwh`, ggf. synthetische Profile oder vorhandene Zeitreihen
+- Production vs Consumption: `annual_pv_production_kwh`, `annual_consumption_kwh`
+- Selfuse Stack/Ratio: `eigenverbrauch_pro_jahr_kwh`, `self_supply_rate_percent`
+- Storage Effect: `battery_capacity_kwh`, `netzbezug_kwh`/`grid_bezug_kwh`
+- Cost Growth: `strompreis_aktuell_eur_kwh`, `preisanstieg_prozent` oder UI-Einstellung
+- ROI Comparison/Scenario: `annual_total_savings_euro`, `total_investment_netto`
+- Tariff Comparison/Cube: Tarifparameter aus Admin-Settings, `annual_consumption_kwh`
+- Income Projection: `annual_financial_benefit_year1`, Eskalationsannahmen
+- CO2 Savings: `co2_savings_kg_per_year` oder Proxy über Produktion
+
+### State- und Event-Flows
+
+- Recalc-Trigger: Sidebar-Button setzt Flag → `perform_calculations` wird neu aufgerufen → `calculation_results` aktualisiert → Chart-Sektionen rerendern
+- Pricing-Änderungen: Änderungen in Pricing-UI → `live_pricing_calculations` neu berechnet → `final_price` in PDF-Pipeline verwendet (Fallbacks, siehe Copilot-Anweisungen)
+- PDF-Export: Beim Rendern Charts als Bytes exportieren und in `session_state` sammeln; `pdf_generator` konsumiert diese Artefakte
+
+### Edge-Cases & Fehlerbilder
+
+- Fehlende Admin-Settings/Preis-Matrix → Preisberechnung fallbackt; UI meldet Hinweis
+- Doppelzählungen Speicher-Aufpreis: Gegenprüfen zu Produkt-DB (siehe Projektbesonderheiten)
+- Projekte ohne Speicher: Switcher „Speicher-Effekt“ blendet sich aus/zeigt Nullreihen
+- Sehr kleine Anlagengröße (`anlage_kwp` ≈ 0): Spezifischer Ertrag/Kapazitätsfaktor → 0 statt Division durch 0
+- Negative/Null Finanzierungseingaben: Tabellen nicht rendern; Info-Hinweis
+- PNG-Export in headless-Umgebungen: Fallbacks oder Renderer-seitige Exporte vorsehen
+
+### Performance-Hinweise
+
+- Plotly: Figure-Objekte wiederverwenden, Daten ggf. aggregieren; PNG-Export asynchron machen
+- Große Tabellen (Tilgungspläne > 30 Jahre): Pagination/Virtualisierung in UI
+- Advanced-Berechnungen: Feature-Flags, Lazy-Ausführung; Ergebnisse cachen (`session_state`)
+
+### Testing-/Verifikationshinweise
+
+- Vertrags-Tests für `CalculationResults`-Schlüssel (Smoke-Tests)
+- Snapshot-Tests für Chart-Spezifikationen (Determinismus sichern)
+- Finanzierungsfunktionen: Unit-Tests für Annuität/Leasing/AfA mit Randfällen
+- PDF-Export: Tests gegen leere/inkonsistente `session_state`-Artefakte
+
+### Migrations-Backlog (gezielte Aufgaben)
+
+- [ ] Dedupliziere `render_analysis` und `render_pricing_modifications_ui`
+- [ ] Extrahiere Universal-Chart-API (TS) und vereinheitliche Paletten/Theme
+- [ ] Implementiere `FinancingService` inkl. Schedules und Sensitivitäten
+- [ ] Mappe `AdvancedAnalyticsService`-Methoden (Stub → Implementierung)
+- [ ] Verdrahte PDF-Export-Artefakte (Bytes + `extended_summary`) in neue Pipeline
+
+### IPC-Beispielverträge (TypeScript)
+
+- `calc/run` (Renderer → Main)
+  - Input: `{ project: ProjectData, opts?: CalcOptions }`
+  - Output: `CalculationResults`
+- `pricing/apply`
+  - Input: `{ base: number, mods: PricingMods }`
+  - Output: `LivePricing`
+- `chart/export`
+  - Input: `{ fig: PlotlySpec, theme?: ChartTheme, width?: number, height?: number }`
+  - Output: `{ bytes: Uint8Array, contentType: 'image/png' }`
+- `financing/annuity`
+  - Input: `{ principal: number, rate: number, years: number }`
+  - Output: `{ monatliche_rate: number, gesamtkosten: number, gesamtzinsen: number, plan: FinancingScheduleRow[] }`
 
 ## Financing/Finanzierung
 
