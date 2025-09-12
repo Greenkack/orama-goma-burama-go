@@ -1,0 +1,12 @@
+* text=auto
+
+# Ensure Python and YAML files use LF in repo, CRLF on checkout for Windows
+*.py text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+
+# Keep binary PDFs as-is
+*.pdf binary
+

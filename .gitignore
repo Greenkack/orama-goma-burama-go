@@ -1,0 +1,131 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# pyright/mypy
+.mypy_cache/
+.pyright/
+
+typecheck/
+
+# IDEs/editors
+.vscode/
+*.code-workspace
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+*.log
+logs/
+
+# Local databases and artifacts
+*.db
+*.sqlite
+*.sqlite3
+
+# PDF and generated docs
+*.pdf
+!Angebot.pdf
+
+# Data/cache/output
+*.tmp
+*.temp
+tmp/
+.cache/
+output/
+
+# ReportLab/pypdf artifacts
+*.aux
+*.out
+
+# App specific exclusions (adjust as needed)
+data/pdf_templates_static/*
+!data/.gitkeep
+
+# Secrets (ensure not tracked)
+*.key
+*.pem
+*.p12
+*.crt
+.secrets*/
+
+# Node (if any UI bits)
+node_modules/
+
+# Python packaging
+poetry.lock
+Pipfile.lock
+
+# Streamlit
+.streamlit/
+
+# VS Code settings that are machine-specific
+.history/
