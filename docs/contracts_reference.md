@@ -36,22 +36,107 @@ Ziel: Eine zentrale, kurze und verlässliche Übersicht aller wichtigen Datenver
 
 ### analysis_results (Dict)
 
-- Wirtschaft/Kosten (Auszug – Zahlenwerte in Netto, wenn nicht anders angegeben)
-  - `base_matrix_price_netto: float | None`
-  - `total_additional_costs_netto: float | None`
-  - `subtotal_netto: float | None`
-  - `total_investment_netto: float`
-  - `total_investment_brutto: float`
-  - `annual_pv_production_kwh: float`
-  - Einspeisevergütung: `einspeiseverguetung_*` Felder
-  - Simulationslisten/KPIs: z. B. `monthly_productions_sim: List[12]`, `cumulative_cash_flows_sim: List[N+1]`, `annual_benefits_sim: List[N]`, `simulation_period_years_effective: int`
+- Allgemein/Meta
+  - `calculation_errors: List[str]` – Referenz auf die im Lauf gesammelten Fehlermeldungen/Warnungen
+  - `simulation_period_years_effective: int` – effektive Laufzeit der Simulation (Jahre)
+  - `electricity_price_increase_rate_effective_percent: float` – angenommene jährliche Strompreissteigerung
+
+- Preis-Matrix & Quellen
+  - `price_matrix_source_type: 'Excel' | 'CSV' | 'Keine'` – Quelle der Preis-Matrix
+  - `price_matrix_loaded_successfully: bool` – ob Matrix geladen/parbar ist
+  - `pvgis_data_used: bool` – ob PVGIS-Daten genutzt wurden (sonst manuelle Berechnung)
+  - `pvgis_source: str` – z. B. "PVGIS-TMY", "Manuelle Berechnung" oder "Keine Anlage"
+  - `specific_annual_yield_kwh_per_kwp: float` – spezifischer Jahresertrag (kWh/kWp·a)
+
+- Verbrauch und Strompreis (Istwerte für Jahr 1)
+  - `total_consumption_kwh_yr: float` – Haushalts- + Heizstrom Jahresverbrauch (kWh)
+  - `jahresstromverbrauch_fuer_hochrechnung_kwh: float` – Basisverbrauch für Kostenhochrechnung
+  - `aktueller_strompreis_fuer_hochrechnung_euro_kwh: float` – aktueller €/kWh
+
+- Ertrag & Verteilung (Jahr 1)
+  - `annual_pv_production_kwh: float` – Jahresproduktion PV (kWh)
+  - `monthly_productions_sim: float[12]` – monatliche Produktion (Jahr 1)
+  - `monthly_consumption_sim: float[12]` – monatlicher Verbrauch (Jahr 1)
+  - `monthly_direct_self_consumption_kwh: float[12]` – monatlicher Direktverbrauch aus PV
+  - `monthly_storage_charge_kwh: float[12]` – geladene Energiemenge in den Speicher (netto)
+  - `monthly_storage_discharge_for_sc_kwh: float[12]` – aus Speicher entladene Energiemenge für Eigenverbrauch
+  - `monthly_feed_in_kwh: float[12]` – monatliche Netzeinspeisung (kWh)
+  - `monthly_grid_bezug_kwh: float[12]` – monatlicher Netzbezug (kWh)
+  - `eigenverbrauch_pro_jahr_kwh: float` – Jahres-Eigenverbrauch gesamt (Direkt + Speicher)
+  - `netzeinspeisung_kwh: float` – Jahres-Netzeinspeisung gesamt (kWh)
+  - `grid_bezug_kwh: float` – Jahres-Netzbezug (kWh)
+
+- Einspeisevergütung (Jahr 1)
+  - `einspeiseverguetung_ct_per_kwh: float` – ct/kWh
+  - `einspeiseverguetung_eur_per_kwh: float` – €/kWh
+  - `annual_feed_in_revenue_year1: float` – Einspeiseerlös Jahr 1 (€)
+  - `tax_benefit_feed_in_year1: float` – optional steuerlicher Vorteil (gewerblich)
+
+- Kosten & Investitionen (Netto, sofern nicht anders angegeben)
+  - `base_matrix_price_netto: float` – Grundpreis aus Preis-Matrix (Pauschale)
+  - `cost_modules_aufpreis_netto: float` – Modulkosten (Aufpreis, falls nicht in Matrix-Pauschale)
+  - `cost_inverter_aufpreis_netto: float` – Wechselrichter-Aufpreis
+  - `cost_storage_aufpreis_product_db_netto: float` – Speicher-Aufpreis aus Produkt-DB (wenn Matrix "Ohne Speicher" oder kein Matrixpreis)
+  - `cost_accessories_aufpreis_netto: float` – Zubehörpauschale
+  - `cost_misc_netto: float` – sonstige Pauschalen
+  - `cost_scaffolding_netto: float` – Gerüstkosten (abh. Fläche/Höhe)
+  - `cost_custom_netto: float` – manuelle Zusatzkosten
+  - `total_optional_components_cost_netto: float` – Summe optionale Komponenten
+  - `total_additional_costs_netto: float` – Summe aller Zusatzkosten (nicht in Matrix-Pauschale)
+  - `subtotal_netto: float` – Zwischensumme netto (Matrix + Zusatzkosten)
+  - `total_investment_netto: float` – Endinvest netto (abzgl. Bonus)
+  - `vat_rate_percent: float` – MwSt.-Satz (%)
+  - `total_investment_brutto: float` – Endinvest brutto
+
+- Wartungskosten
+  - `annual_maintenance_costs_eur_year1: float` – Wartung Jahr 1 (€)
+
+- Simulation über Laufzeit
+  - `annual_productions_sim: float[N]` – Jahresproduktion pro Jahr (mit Degradation)
+  - `annual_benefits_sim: float[N]` – jährlicher Nutzen (Ersparnis + EEG + Steuer)
+  - `annual_maintenance_costs_sim: float[N]` – Wartung je Jahr
+  - `annual_cash_flows_sim: float[N]` – Cashflow je Jahr (ohne Jahr 0)
+  - `cumulative_cash_flows_sim: float[N+1]` – kumulierte Cashflows inkl. Jahr 0 (Invest)
+  - `annual_elec_prices_sim: float[N]` – angenommener Strompreis €/kWh je Jahr
+  - `annual_feed_in_tariffs_sim: float[N]` – Einspeisetarife €/kWh je Jahr (EEG → Marktwert)
+  - `annual_revenue_from_feed_in_sim: float[N]` – jährliche Einspeiseerlöse (€)
+
+- KPIs/Wirtschaftlichkeit
+  - `annual_electricity_cost_savings_self_consumption_year1: float` – Ersparnis Jahr 1 aus Eigenverbrauch (€)
+  - `annual_financial_benefit_year1: float` – Gesamtnutzen Jahr 1 (€)
+  - `amortization_time_years: float` – Amortisationszeit (Jahre); ggf. Cheat angewendet
+  - `amortization_time_years_original: float` – optional, Originalwert vor Cheat
+  - `npv_value: float` – Nettobarwert (bei Diskontsatz = loan_interest_rate)
+  - `npv_per_kwp: float` – NPV pro kWp
+  - `irr_percent: float` – interner Zinsfuß (%)
+  - `lcoe_euro_per_kwh: float` – Stromgestehungskosten €/kWh (diskontiert)
+  - `effektiver_pv_strompreis_ct_kwh: float` – LCOE in ct/kWh
+  - `simple_roi_percent: float` – einfacher ROI Jahr 1 (%)
+  - `performance_ratio_percent: float` – PR (%)
+  - `afa_linear_pa_eur: float` – lineare AfA (€/Jahr)
+  - `restwert_anlage_eur_nach_laufzeit: float` – Restwert nach Simulationsdauer (€)
+  - `eigenkapitalrendite_roe_pct: float` – Eigenkapitalrendite (hier ~ IRR)
+  - `alternativanlage_kapitalwert_eur: float` – Vergleichswert Alternativanlage
+
+- CO2/Umwelt
+  - `annual_co2_savings_kg: float` – CO2-Einsparung Jahr 1 (kg)
+  - `co2_equivalent_trees_per_year: float` – Bäume/Jahr (Äquivalent)
+  - `co2_equivalent_car_km_per_year: float` – Pkw-km/Jahr (Äquivalent)
+  - `co2_equivalent_flights_muc_pmi_per_year: float` – Flüge MUC–PMI/Jahr (Äquivalent)
+  - `co2_avoidance_cost_euro_per_tonne: float` – Vermeidungskosten €/t CO2
+
+- Zukunftsgeräte (optional)
+  - `eauto_ladung_durch_pv_kwh: float` – PV-Anteil am EV-Laden (kWh/Jahr)
+  - `pv_deckungsgrad_wp_pct: float` – PV-Deckungsgrad für Wärmepumpe (%)
+
 - Chart-Bytes (für PDF-Einbau; PNG)
   - `yearly_production_chart_bytes: bytes | None`
   - `break_even_chart_bytes: bytes | None`
   - `amortisation_chart_bytes: bytes | None`
   - `co2_savings_chart_bytes: bytes | None`
+
 - Fallback-Preise
-  - `final_price: float | None` (kann aus UI-Session-State oder aus `total_investment_*` abgeleitet werden)
+  - `final_price: float | None` – UI-Livepreis oder aus `total_investment_*` abgeleitet
 
 ### company_info (Dict)
 
