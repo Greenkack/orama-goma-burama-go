@@ -10,11 +10,7 @@ import type { SimulationSettings } from '../../shared/types';
 export default function LivePreview() {
   const [settings, setSettings] = useState<SimulationSettings>({
     duration_years: 20,
-    strompreissteigerung_prozent: 2.5,
-    rabatte_prozent: 0,
-    rabatte_betrag: 0,
-    aufpreise_prozent: 0,
-    aufpreise_betrag: 0
+    strompreissteigerung_prozent: 2.5
   });
 
   const handleDurationChange = (value: number | null) => {

@@ -1,35 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Steps } from 'primereact/steps';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Divider } from 'primereact/divider';
+import { Toast } from 'primereact/toast';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import ModuleSelection from '../components/solar/ModuleSelection';
 import InverterSelection from '../components/solar/InverterSelection';
 import StorageSelection from '../components/solar/StorageSelection';
 import AccessorySelection from '../components/solar/AccessorySelection';
 import ProductSummary from '../components/solar/ProductSummary';
-import type { ProductSelection } from '../../shared/types';
+import type { ProductSelection, Module, Inverter, Storage, Accessory } from '../../shared/types';
 
 export default function SolarCalculator() {
   const navigate = useNavigate();
+  const toast = useRef<Toast>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [productSelection, setProductSelection] = useState<ProductSelection>({
-    pv_module_count: 0,
-    pv_module_hersteller: '',
-    pv_module_modell: '',
-    pv_module_leistung_wp: 0,
-    wechselrichter_hersteller: '',
-    wechselrichter_modell: '',
-    wechselrichter_count: 1,
-    wechselrichter_leistung_kw: 0,
-    speicher_enabled: false,
-    wallbox_enabled: false,
-    energiemanagement_enabled: false,
-    notstrom_enabled: false,
-    leistungsoptimierung_enabled: false,
-    carport_enabled: false,
-    tierabwehr_enabled: false
+    moduleQuantity: 1,
+    storageEnabled: false,
+    accessories: []
   });
 
   const steps = [
@@ -60,9 +52,70 @@ export default function SolarCalculator() {
     }
   };
 
-  const handleCalculateStart = () => {
-    // Trigger calculations and navigate to results
-    navigate('/results');
+  const handleCalculateStart = async () => {
+    if (!productSelection.module || !productSelection.inverter) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'Unvollständige Auswahl',
+        detail: 'Bitte wählen Sie mindestens ein Modul und einen Wechselrichter aus.'
+      });
+      return;
+    }
+
+    setIsCalculating(true);
+    
+    try {
+      // Prepare calculation data for Python Bridge
+      const projectData = {
+        project_details: {
+          module_quantity: productSelection.moduleQuantity,
+          selected_module_id: productSelection.module.id,
+          selected_inverter_id: productSelection.inverter.id,
+          include_storage: productSelection.storageEnabled,
+          selected_storage_id: productSelection.storage?.id || null,
+          selected_storage_storage_power_kw: productSelection.storage?.powerKw || 0,
+          // Default values for calculation
+          annual_consumption_kwh_yr: 4000,
+          electricity_price_kwh: 0.30,
+          roof_inclination_deg: 30,
+          roof_orientation: "Süd",
+          latitude: 48.13, // Munich default
+          longitude: 11.57, // Munich default
+          free_roof_area_sqm: 50,
+          building_height_gt_7m: false,
+          include_additional_components: productSelection.accessories.length > 0
+        }
+      };
+
+      // Call Python Bridge API
+      const result = await window.electronAPI.python.calculate(projectData);
+      
+      if (result.success) {
+        toast.current?.show({
+          severity: 'success',
+          summary: 'Berechnung erfolgreich',
+          detail: 'Die Wirtschaftlichkeitsberechnung wurde abgeschlossen.'
+        });
+        
+        // Store results in sessionStorage for ResultsPage
+        sessionStorage.setItem('calculationResults', JSON.stringify(result.data));
+        sessionStorage.setItem('productSelection', JSON.stringify(productSelection));
+        
+        // Navigate to results page
+        navigate('/results');
+      } else {
+        throw new Error(result.error || 'Unbekannter Berechnungsfehler');
+      }
+    } catch (error) {
+      console.error('Calculation error:', error);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Berechnungsfehler',
+        detail: error instanceof Error ? error.message : 'Ein unerwarteter Fehler ist aufgetreten.'
+      });
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -70,29 +123,35 @@ export default function SolarCalculator() {
       case 0:
         return (
           <ModuleSelection 
-            selection={productSelection}
-            onChange={setProductSelection}
+            selectedModule={productSelection.module}
+            onModuleSelect={(module: Module) => setProductSelection(prev => ({ ...prev, module }))}
+            quantity={productSelection.moduleQuantity}
+            onQuantityChange={(quantity: number) => setProductSelection(prev => ({ ...prev, moduleQuantity: quantity }))}
           />
         );
       case 1:
         return (
           <InverterSelection 
-            selection={productSelection}
-            onChange={setProductSelection}
+            selectedInverter={productSelection.inverter}
+            onInverterSelect={(inverter: Inverter) => setProductSelection(prev => ({ ...prev, inverter }))}
+            systemSize={productSelection.module ? (productSelection.module.powerWp * productSelection.moduleQuantity) / 1000 : 0}
           />
         );
       case 2:
         return (
           <StorageSelection 
-            selection={productSelection}
-            onChange={setProductSelection}
+            selectedStorage={productSelection.storage || null}
+            onStorageSelect={(storage: Storage | null) => setProductSelection(prev => ({ ...prev, storage }))}
+            enabled={productSelection.storageEnabled}
+            onEnabledChange={(enabled: boolean) => setProductSelection(prev => ({ ...prev, storageEnabled: enabled }))}
+            systemSize={productSelection.module ? (productSelection.module.powerWp * productSelection.moduleQuantity) / 1000 : 0}
           />
         );
       case 3:
         return (
           <AccessorySelection 
-            selection={productSelection}
-            onChange={setProductSelection}
+            selectedAccessories={productSelection.accessories}
+            onAccessoriesChange={(accessories: Accessory[]) => setProductSelection(prev => ({ ...prev, accessories }))}
           />
         );
       case 4:
@@ -109,6 +168,8 @@ export default function SolarCalculator() {
 
   return (
     <div className="min-h-screen">
+      <Toast ref={toast} />
+      
       <div className="flex justify-content-between align-items-center mb-4">
         <h1 className="text-4xl font-bold text-primary">Solarrechner</h1>
         <div className="flex gap-2">
@@ -138,7 +199,17 @@ export default function SolarCalculator() {
         <Divider />
 
         <div className="min-h-400">
-          {renderStepContent()}
+          {isCalculating ? (
+            <div className="flex justify-content-center align-items-center h-20rem">
+              <div className="text-center">
+                <ProgressSpinner style={{ width: '50px', height: '50px' }} strokeWidth="4" />
+                <p className="mt-3">Berechnung läuft...</p>
+                <p className="text-sm text-600">Bitte warten Sie, während die Wirtschaftlichkeitsberechnung durchgeführt wird.</p>
+              </div>
+            </div>
+          ) : (
+            renderStepContent()
+          )}
         </div>
 
         <Divider />
@@ -149,7 +220,7 @@ export default function SolarCalculator() {
             icon="pi pi-chevron-left"
             className="p-button-secondary"
             onClick={handlePrevious}
-            disabled={currentStep === 0}
+            disabled={currentStep === 0 || isCalculating}
           />
           
           <div className="flex gap-2">
@@ -158,6 +229,7 @@ export default function SolarCalculator() {
               icon="pi pi-home"
               className="p-button-outlined"
               onClick={() => navigate('/')}
+              disabled={isCalculating}
             />
             
             {currentStep < steps.length - 1 ? (
@@ -166,13 +238,16 @@ export default function SolarCalculator() {
                 icon="pi pi-chevron-right"
                 iconPos="right"
                 onClick={handleNext}
+                disabled={isCalculating}
               />
             ) : (
               <Button 
-                label="Berechnungen starten" 
-                icon="pi pi-play"
+                label={isCalculating ? "Berechnung läuft..." : "Berechnungen starten"}
+                icon={isCalculating ? "pi pi-spin pi-spinner" : "pi pi-play"}
                 className="p-button-success"
                 onClick={handleCalculateStart}
+                disabled={isCalculating || !productSelection.module || !productSelection.inverter}
+                loading={isCalculating}
               />
             )}
           </div>

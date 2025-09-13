@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import url, { fileURLToPath } from 'url';
+import { setupIpcHandlers } from './ipc-handlers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let mainWindow: BrowserWindow | null = null;
@@ -11,12 +12,30 @@ const createWindow = async () => {
     width: 1400,
     height: 900,
     webPreferences: {
-      preload: isDev
-        ? path.join(process.cwd(), '.vite-electron', 'preload.cjs')
-        : path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload-simple.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false
     }
+  });
+
+  // Set Content Security Policy
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self' data: 'unsafe-inline'; " +
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+          "style-src 'self' 'unsafe-inline' data:; " +
+          "img-src 'self' data: blob:; " +
+          "font-src 'self' data:; " +
+          "connect-src 'self';"
+        ]
+      }
+    });
   });
 
   if (isDev) {
@@ -33,6 +52,9 @@ const createWindow = async () => {
   }
 
   mainWindow.on('closed', () => (mainWindow = null));
+  
+  // Setup IPC handlers
+  setupIpcHandlers(mainWindow);
 };
 
 app.on('ready', createWindow);
@@ -42,6 +64,3 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (mainWindow === null) createWindow();
 });
-
-// Simple health ping
-ipcMain.handle('ping', async () => 'pong');

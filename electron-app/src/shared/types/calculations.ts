@@ -116,6 +116,7 @@ export interface ProjectData {
 // ============================================================================
 
 export interface CompanyInfo {
+  id?: string; // Optional for database operations
   name: string;
   street: string;
   city: string;

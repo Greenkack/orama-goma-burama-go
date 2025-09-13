@@ -1,0 +1,3 @@
+name;manufacturer;model;power_kw;input_voltage_range_v;max_efficiency_percent;european_efficiency_percent;mppt_inputs;max_input_current_a;dimensions_length_mm;dimensions_width_mm;dimensions_height_mm;weight_kg;protection_class;cost_netto_eur;cost_brutto_eur;warranty_years;is_string_inverter;is_power_optimizer;max_modules_per_string;operating_temperature_range_c
+Sample Inverter 1;Manufacturer A;Inverter X1;5.0;150-1000;97.3;96.8;2;15;494,210,185;15. Mai;IP65;1250.00;1487.50;12;true;false;25;-25 to +60;;
+Sample Inverter 2;Manufacturer B;Inverter Y2;8.0;125-1000;98.1;97.5;3;20;540,350,210;22. Mrz;IP65;1850.00;2201.50;15;true;false;30;-40 to +65;;

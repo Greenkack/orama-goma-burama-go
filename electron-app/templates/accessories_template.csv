@@ -1,0 +1,4 @@
+name;category;manufacturer;model;description;cost_netto_eur;cost_brutto_eur;cost_per_unit_netto_eur;cost_per_unit_brutto_eur;unit;quantity_per_installation;is_required;compatibility_tags;installation_time_hours;warranty_years
+Sample Cable Set;Kabel;Manufacturer A;Cable X1;DC-Verkabelung für PV-Module;125.00;148.75;25.00;29.75;Meter;5;true;string,rooftop;2;5
+Sample Monitoring;Monitoring;Manufacturer B;Monitor Y2;Überwachungssystem für PV-Anlage;350.00;416.50;350.00;416.50;Stück;1;false;inverter,app;3;10
+Sample Mounting;Montage;Manufacturer C;Mount Z3;Dachmontagesystem für Ziegel;450.00;535.50;15.00;17.85;Stück;30;true;rooftop,tiles;8;15

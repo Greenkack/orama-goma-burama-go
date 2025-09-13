@@ -54,7 +54,14 @@ var require_electron = __commonJS({
 var preload_exports = {};
 module.exports = __toCommonJS(preload_exports);
 var import_electron = __toESM(require_electron(), 1);
-import_electron.contextBridge.exposeInMainWorld("ding", {
-  ping: () => import_electron.ipcRenderer.invoke("ping")
+import_electron.contextBridge.exposeInMainWorld("electronAPI", {
+  ping: () => import_electron.ipcRenderer.invoke("ping"),
+  // Database operations - simplified
+  uploadFile: (data) => import_electron.ipcRenderer.invoke("db:uploadFile", data),
+  getProducts: (category) => import_electron.ipcRenderer.invoke("db:getProducts", category),
+  addProduct: (productData) => import_electron.ipcRenderer.invoke("db:addProduct", productData),
+  updateProduct: (id, productData) => import_electron.ipcRenderer.invoke("db:updateProduct", id, productData),
+  deleteProduct: (id) => import_electron.ipcRenderer.invoke("db:deleteProduct", id),
+  getStats: () => import_electron.ipcRenderer.invoke("db:getStats")
 });
 //# sourceMappingURL=preload.cjs.map

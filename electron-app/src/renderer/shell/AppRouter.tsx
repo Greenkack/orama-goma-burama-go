@@ -12,7 +12,9 @@ import AdminArea from "../pages/AdminArea";
 import DocumentGeneration from "../pages/DocumentGeneration";
 import CRMArea from "../pages/CRMArea";
 import PlanningArea from "../pages/PlanningArea";
-import LivePreview from "../components/LivePreview";
+import HeatpumpSimulator from "../pages/HeatpumpSimulator";
+import { DatabaseManager } from "../components/database/DatabaseManager";
+import ProductDatabase from "../components/ProductDatabase";
 
 export default function AppRouter() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -54,9 +56,12 @@ export default function AppRouter() {
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminArea />} />
+            <Route path="/database" element={<DatabaseManager />} />
+            <Route path="/product-database" element={<ProductDatabase />} />
             <Route path="/documents" element={<DocumentGeneration />} />
             <Route path="/crm" element={<CRMArea />} />
             <Route path="/planning" element={<PlanningArea />} />
+            <Route path="/heatpump-simulator" element={<HeatpumpSimulator />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
@@ -67,7 +72,10 @@ export default function AppRouter() {
           onHide={() => setSidebarVisible(false)}
           className="w-30rem"
         >
-          <LivePreview />
+          <div className="p-4">
+            <h3>Live-Vorschau</h3>
+            <p>Live-Vorschau wird demnächst verfügbar sein.</p>
+          </div>
         </Sidebar>
       </div>
     </Router>

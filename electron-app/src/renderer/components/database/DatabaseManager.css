@@ -1,0 +1,127 @@
+/* Database Manager Styles */
+.database-manager {
+  background: var(--surface-ground);
+  min-height: 100vh;
+}
+
+.database-manager .p-tabview-nav li .p-tabview-nav-link {
+  padding: 1rem 1.5rem;
+  font-weight: 500;
+}
+
+.database-manager .p-datatable .p-datatable-thead > tr > th {
+  background: var(--primary-color);
+  color: var(--primary-color-text);
+  border-color: var(--primary-color);
+}
+
+.database-manager .p-button-rounded {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.database-manager .p-fileupload-choose {
+  margin-bottom: 0.5rem;
+}
+
+.database-manager .product-form .p-fluid .field {
+  margin-bottom: 1.5rem;
+}
+
+.database-manager .toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.database-manager .stats-card {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+}
+
+.database-manager .stats-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.database-manager .stats-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.database-manager .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.database-manager .dialog-icon {
+  font-size: 2rem;
+  margin-right: 1rem;
+  color: var(--orange-500);
+}
+
+/* File Upload Enhancements */
+.database-manager .p-fileupload.p-fileupload-basic {
+  overflow: hidden;
+  position: relative;
+}
+
+.database-manager .p-fileupload-basic input[type=file] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* Form Validation */
+.database-manager .field-error {
+  border-color: var(--red-500);
+}
+
+.database-manager .field-error-message {
+  color: var(--red-500);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .database-manager .p-toolbar .toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .database-manager .p-dropdown,
+  .database-manager .p-button {
+    width: 100%;
+  }
+  
+  .database-manager .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Success/Error States */
+.database-manager .success-indicator {
+  color: var(--green-500);
+}
+
+.database-manager .error-indicator {
+  color: var(--red-500);
+}
+
+.database-manager .warning-indicator {
+  color: var(--orange-500);
+}

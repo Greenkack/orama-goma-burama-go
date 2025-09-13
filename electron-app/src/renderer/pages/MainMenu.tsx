@@ -6,48 +6,55 @@ import { Button } from 'primereact/button';
 export default function MainMenu() {
   const navigate = useNavigate();
 
-  const menuCards = [
+  const mainMenuCards = [
     {
-      title: 'Berechnungen',
-      description: 'PV/WP Kalkulationen und Solarrechner',
-      icon: 'pi pi-calculator',
-      route: '/solar-calculator',
+      title: 'Kundendaten & Bedarfsanalyse',
+      description: 'Kundendaten erfassen und Energiebedarf analysieren',
+      icon: 'pi pi-users',
+      route: '/customer-data',
       color: 'primary'
     },
     {
-      title: 'Kundendaten',
-      description: 'Eingabe und Verwaltung von Kundendaten',
-      icon: 'pi pi-users',
-      route: '/customer-data',
+      title: 'Solar Calculator',
+      description: 'PV-Anlagen Kalkulation und Produktauswahl',
+      icon: 'pi pi-calculator',
+      route: '/solar-calculator',
       color: 'success'
     },
     {
-      title: 'Ergebnisse',
-      description: 'Berechnungsergebnisse und KPIs',
-      icon: 'pi pi-chart-line',
-      route: '/results',
+      title: 'Wärmepumpen Simulator',
+      description: 'Wärmepumpen Berechnung und Dimensionierung',
+      icon: 'pi pi-home',
+      route: '/heatpump-simulator',
       color: 'info'
     },
     {
-      title: 'Dashboard',
-      description: 'Charts, Diagramme und Visualisierungen',
-      icon: 'pi pi-chart-bar',
-      route: '/dashboard',
+      title: 'Ergebnisse und Dashboard',
+      description: 'Berechnungsergebnisse, KPIs und Visualisierungen',
+      icon: 'pi pi-chart-line',
+      route: '/results',
       color: 'warning'
     },
     {
-      title: 'Dokumentenerstellung',
-      description: 'PDF-Generierung und Multi-PDF',
-      icon: 'pi pi-file-pdf',
-      route: '/documents',
+      title: 'CRM',
+      description: 'Kundenprozesse, Pipeline und Verwaltung',
+      icon: 'pi pi-briefcase',
+      route: '/crm',
       color: 'danger'
     },
     {
-      title: 'CRM',
-      description: 'Kundenprozesse und Verwaltung',
-      icon: 'pi pi-briefcase',
-      route: '/crm',
+      title: 'Dokumentenerstellung',
+      description: 'PDF-Generierung, Angebote und Multi-PDF',
+      icon: 'pi pi-file-pdf',
+      route: '/documents',
       color: 'secondary'
+    },
+    {
+      title: 'Produktdatenbank',
+      description: 'Produkte verwalten, Excel Import und CRUD',
+      icon: 'pi pi-database',
+      route: '/product-database',
+      color: 'help'
     }
   ];
 
@@ -59,7 +66,7 @@ export default function MainMenu() {
       </div>
 
       <div className="grid grid-nogutter justify-content-center gap-4" style={{ marginTop: '2rem' }}>
-        {menuCards.map((card, index) => (
+        {mainMenuCards.map((card, index) => (
           <div key={index} className="col-12 md:col-6 lg:col-4">
             <Card 
               className={`h-full cursor-pointer transition-all transition-duration-300 hover:shadow-4 border-1 surface-border`}
@@ -78,25 +85,19 @@ export default function MainMenu() {
         ))}
       </div>
 
-      {/* Planungen Placeholder */}
-      <div className="text-center mt-6">
-        <Card className="inline-block">
-          <div className="p-4">
-            <i className="pi pi-cog text-4xl text-500 mb-3"></i>
-            <h3 className="text-xl font-semibold text-500">Planungen</h3>
-            <p className="text-500">Demnächst verfügbar</p>
+      {/* Einstellungen & Adminbereich - Links unten, kleiner als Hauptmenüs */}
+      <div className="fixed left-0 bottom-0 p-4">
+        <Card className="inline-block cursor-pointer hover:shadow-2 transition-all transition-duration-300">
+          <div className="p-3" onClick={() => navigate('/admin')}>
+            <div className="flex align-items-center gap-2">
+              <i className="pi pi-cog text-lg text-600"></i>
+              <div>
+                <h4 className="text-sm font-semibold mb-1 text-700">Einstellungen & Adminbereich</h4>
+                <p className="text-xs text-500 m-0">Datenbank, Konfiguration & Admin-Tools</p>
+              </div>
+            </div>
           </div>
         </Card>
-      </div>
-
-      {/* Admin Bereich - Links unten */}
-      <div className="fixed left-0 bottom-0 p-4">
-        <Button 
-          label="Adminbereich" 
-          icon="pi pi-cog"
-          className="p-button-secondary"
-          onClick={() => navigate('/admin')}
-        />
       </div>
     </div>
   );
