@@ -173,6 +173,13 @@ Ziel: Eine zentrale, kurze und verlässliche Übersicht aller wichtigen Datenver
   - `pdf_section_order: List[str]`
   - `pdf_section_contents: Dict[str, List[{ id: str, type: 'text'|'image'|'pdf'|'table'|'chart', data: Any }]>`
   - `pdf_custom_sections: Dict[str, { name: str, icon: str, content_types: List[str], created: ISODate }]>`
+- Erweiterte Analysen
+  - `advanced_calculation_results: Dict` – konsolidierte KPIs und Detailfelder für Advanced-Abschnitte (siehe unten)
+- Wärmepumpe (heatpump_ui)
+  - `building_data: Dict` – Ergebnisse der Gebäudeanalyse/Heizlast
+  - `heatpump_data: Dict` – ausgewählte Wärmepumpe + Optionen
+  - `economics_data: Dict` – Wirtschaftlichkeit (WP vs. Altanlage)
+  - `integration_data: Dict` – PV-Integration (Deckung/Optimierung)
 
 ## 3) PDF-Pipeline – Generator-Vertrag
 
@@ -263,3 +270,71 @@ flowchart LR
 - Chart-Bytes serverseitig generieren (node-kaleido) → als `ArrayBuffer` einbetten.
 - PDF-Stack (pdf-lib/pdfmake) mit zweiphasigem Seitenzähler (optional).
 - Preview mit `pdf.js`; DnD via `dnd-kit`.
+
+## 11) Erweiterte Berechnungen – Contracts (calculations_extended)
+
+Quelle: `calculations_extended.py` und Advanced-Bereiche in `analysis.py`.
+
+- Sammler-Funktion: `run_all_extended_analyses(offer_data) -> Dict[str, Any]`
+  - Erwartete Inputs (offer_data):
+    - `total_investment: float`, `annual_savings: float`, `annual_production_kwh: float`, `pv_size_kwp: float`, optional `total_embodied_energy_kwh: float`
+  - Ergebnisse (Keys, Einheiten):
+    - `dynamic_payback_3_percent: float (Jahre)`
+    - `dynamic_payback_5_percent: float (Jahre)`
+    - `net_present_value: float (€)`
+    - `internal_rate_of_return: float (%)`
+    - `profitability_index: float (ratio)`
+    - `lcoe: float` – in ct/kWh gemäß Implementierung; Mapping zum PDF: `lcoe_euro_per_kwh = lcoe/100`
+    - `co2_avoidance_per_year_tons: float (t/a)`
+    - `energy_payback_time: float (Jahre)`
+    - `co2_payback_time: float (Jahre)`
+    - `total_roi_percent: float (%)`
+    - `annual_equity_return_percent: float (%)`
+    - `profit_after_10_years: float (€)`
+    - `profit_after_20_years: float (€)`
+
+Hinweise/Konventionen:
+
+- In derselben Datei existieren doppelte `calculate_lcoe`-Definitionen (€/kWh vs. ct/kWh). Für Konsistenz in den Verträgen bevorzugen wir: `lcoe_euro_per_kwh` in `analysis_results` und konvertieren ggf. aus ct/kWh.
+- Advanced-UI nutzt zusätzlich Integrator-Funktionen (in `calculations.py: AdvancedCalculationsIntegrator`) mit Ergebnisfeldern:
+  - `calculate_lcoe_advanced` → `{ lcoe_simple: €/kWh, lcoe_discounted: €/kWh, yearly_lcoe: number[], grid_comparison: ratio, savings_potential: €/kWh }`
+  - `calculate_npv_sensitivity(calc_results, rate:number)` → `npv:number`
+  - `calculate_irr_advanced(calc_results)` → `{ irr: %, mirr: %, profitability_index: number }`
+  - Weitere (CO2/Temperatur/WR/Recycling/Optimierung) liefern strukturierte Dicts; Ergebnisse werden UI-seitig dargestellt und optional in `advanced_calculation_results` persistiert.
+
+Empfohlene TS-Interfaces (Auszug):
+
+- `ExtendedAnalysesResult` mit obigen Keys; `LcoeAdvancedResult` wie Integrator; ggf. kombinierter Typ für `advanced_calculation_results`.
+
+## 12) Wärmepumpen-Analyse – Contracts (heatpump_ui/calculations_heatpump)
+
+Quelle: `heatpump_ui.py`, `calculations_heatpump.py`.
+
+- building_data (Session):
+  - Grunddaten: `area:number`, `type:string`, `year:string`, `insulation:string`, `heating_system:string`, `hot_water:string`
+  - Verbrauch: `consumption_inputs = { oil_l:number, gas_kwh:number, wood_ster:number, heating_hours:number, system_efficiency_pct:number }`
+  - Parameter: `desired_temp:number`, `heating_days:number`, `outside_temp:number`, `system_temp:string`
+  - Ergebnisse: `heat_load_kw:number`, `heat_load_source:'verbrauchsbasiert'|'gebäudedaten'`, `calculated_at: datetime`
+
+- heatpump_data (Session):
+  - `selected_heatpump: { manufacturer, model, type, heating_power:number, cop:number, scop:number, price:number, ... }`
+  - `alternatives: List<...>` (weitere Geräte)
+  - Optionen: `sizing_factor:number`, `hot_water_storage:number`, `backup_heating:boolean`, `smart_control:boolean`
+  - `building_data: building_data`
+
+- economics_data (Session, UI-Version):
+  - `total_investment:number`, `annual_savings:number`, `payback_time:number|inf`,
+  - `hp_electricity_consumption:number`, `annual_hp_cost:number`, `annual_old_cost:number`,
+  - `heat_demand_kwh:number`, `electricity_price:number`, `subsidy_amount:number`
+
+- integration_data (Session):
+  - `pv_coverage_hp:number` (0..1), `annual_pv_savings_hp:number`, `total_annual_savings:number`,
+  - `smart_control_enabled:boolean`, `thermal_storage_size:number`
+
+- calculations_heatpump.calculate_heatpump_economics(...) (Service-Rückgabe):
+  - `{ heating_demand_kwh, electricity_consumption_kwh, annual_electricity_cost, annual_alternative_cost, annual_savings, payback_period_years|null, total_savings_20y, investment_cost, cop, recommendation }`
+
+TS-Mapping-Hinweise:
+
+- UI-eigene `economics_data` unterscheidet sich leicht von der Service-Funktion; bei einer TS-Portierung entweder eine vereinheitlichte Struktur definieren oder beide Varianten unterstützen und beim Speichern konvertieren.
+- Für PV-Integration werden PV-KPIs aus `analysis_results` benötigt: `annual_pv_production_kwh`, `anlage_kwp`.

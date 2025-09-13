@@ -36,7 +36,6 @@ Das Modul `analysis.py` ist das zentrale Analyse- und Dashboard-Modul der App un
 
 ### Wichtige Session-State-Keys
 
-
 - `project_data`: Eingabedaten des Projekts (Adresse, Produkte, Parameter)
 - `calculation_results`: Ergebnisse aus `perform_calculations`
 - `live_pricing_calculations`: { base_cost, total_rabatte_nachlaesse, total_aufpreise_zuschlaege, final_price }
@@ -47,7 +46,6 @@ Das Modul `analysis.py` ist das zentrale Analyse- und Dashboard-Modul der App un
 - `advanced_calculation_results`: Ergebnisse der Advanced-Analysen und zusammengefasste KPIs
 
 ## Diagramm-Engine (Plotly)
-
 
 Zentrale Bausteine:
 
@@ -102,7 +100,6 @@ Fehlerinvarianten: Fehlende Keys werden robust behandelt (Fallbacks/0), UI zeigt
 Hinweis: Optional importierte Modern-/Enhancement-Module (z. B. `enhanced_analysis_charts`, `modern_dashboard_ui`) werden bei Abwesenheit über Fallback-Pfade abgefangen.
 
 ## Erweiterte Berechnungen und Abschnitte
-
 
 AdvancedCalculationsIntegrator (verwendet über `st.session_state.calculations_integrator`):
 
@@ -225,7 +222,6 @@ PDF-Export-Vorbereitung:
 
 ## Financing/Finanzierung
 
-
 Verwendete Funktionen aus `financial_tools.py`:
 
 - `calculate_annuity(principal, rate, years)` → monatliche Rate, Gesamtkosten/-zinsen, Tilgungsplan
@@ -250,7 +246,6 @@ Session-State für PDF:
 
 ## Doppelte Definitionen / Konsolidierung (für Migration)
 
-
 In `analysis.py` existieren teils doppelte Varianten:
 
 - `render_analysis` (klassisch vs. „modern“)
@@ -264,7 +259,6 @@ Migrationsvorschlag:
 - CO2-Switcher vereinheitlichen, Charts über generische Chart-Komponente steuern
 
 ## TypeScript/Electron: Services, IPC und Datamodelle
-
 
 Ziel ist die Trennung in Services (Electron Main) und UI (PrimeReact im Renderer) mit klaren IPC-Verträgen.
 
@@ -312,12 +306,10 @@ Fehler-/Edge-Handling:
 
 ## PDF-Export-Artefakte aus der Analyse
 
-
 - Allgemein: Alle relevanten Diagramme werden zusätzlich als PNG-Bytes exportiert und im Session-State gesammelt (z. B. `chart_bytes`, `financing_*`, `advanced_calculation_results`).
 - Der PDF-Generator konsumiert daraus Deckblatt-/KPI-Zahlen, Charts (Produktion, Cashflow, ROI, CO2), Tabellen (Tilgungspläne, Szenarien) und Extended KPIs (`extended_summary`).
 
 ## Migration: Hinweise und Schritte
-
 
 1) Konsolidierung in Python (optional): Dubletten markieren und eine Referenzvariante wählen
 2) TypeScript-Service-Skelette erzeugen; IPC-Kanäle definieren
@@ -326,7 +318,6 @@ Fehler-/Edge-Handling:
 5) PDF-Pipeline anpassen: Chart-Bytes/Extended-KPIs aus Services einsammeln und an Template-Engine übergeben
 
 ## Anhänge: Funktionskontrakte (Kurzform)
-
 
 - prepare_advanced_calculations_for_pdf_export(calc_results, project_data, texts)
   - Input: Berechnungsergebnisse/Projekt; Output: `AdvancedExport` + Session-State

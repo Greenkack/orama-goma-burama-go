@@ -52,6 +52,7 @@ Spalten (aktuelle Zielstruktur nach Migration):
 - additional_cost_netto REAL DEFAULT 0.0 (Aufpreisposition)
 
 Bemerkungen:
+
 - Pflichtfelder: `category`, `model_name` (NOT NULL + `model_name` UNIQUE).
 - Timestamps: Defaults in der Tabelle; Insert/Update setzen zusätzlich ISO-Strings.
 - Preis-/Leistungsfelder: MULTI-Kategorie-tauglich (Module/WR/Speicher/…)

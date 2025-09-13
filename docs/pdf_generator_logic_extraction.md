@@ -102,8 +102,8 @@ Diese Dokumentation extrahiert die komplette Logik aus `pdf_generator.py` (Stand
   - Anrede-Logik via _generate_complete_salutation_line(customer_data,texts) (Herr/Frau/Familie/Firma/generic).
 
 Fehlende Implementierungen im File (vermutlich existieren in demselben Modul oder in Nachbar-Dateien; hier referenziert):
-- _validate_pdf_data_availability
 
+- _validate_pdf_data_availability
 - _create_no_data_fallback_pdf
 - _create_plaintext_pdf_fallback
 

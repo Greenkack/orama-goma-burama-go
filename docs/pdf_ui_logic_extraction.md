@@ -13,7 +13,6 @@ Quellen und Integrationen:
 - Optional: `pdf_preview.show_pdf_preview_interface` (Vorschau/Editor), `pypdf` oder `PyPDF2` (Debug-Check)
 - CRM/DB: `database.get_db_connection`, `crm.save_customer/save_project/create_tables_crm`, `database.add_customer_document`
 
-
 ## Wichtigste Funktionen
 
 ### 1) render_pdf_ui(...)
@@ -51,11 +50,9 @@ Wichtig: `final_price`
 
 - Live-Kosten werden hier berechnet und als `"final_price"` in `st.session_state["live_pricing_calculations"]` abgelegt. Der Generator darf dies als Netto-/Brutto-Anker verwenden (vgl. Projektkonventionen).
 
-
 ### 2) show_advanced_pdf_preview(...)
 
 Optionales Vorschau-/Editor-Frontend, wenn `pdf_preview` verfügbar ist. Übergibt einen `generate_pdf_func`-Callback, der intern `_generate_offer_pdf_safe` mit Standardparametern (Admin-Settings, Produkte, Firmen-Dokumente) aufruft. Füllt bei fehlender Firma einen Standard-Fallback.
-
 
 ### 3) render_pdf_debug_section(...)
 
@@ -65,7 +62,6 @@ Ein Debug-Expander, der prüft:
 - Aktive Firma und Anzahl hinterlegter Firmendokumente
 - Projektauswahl für Module/WR/Speicher inkl. Prüfung auf vorhandene Datenblattdateien unter `data/product_datasheets`
 - Aktuelle `pdf_inclusion_options` als JSON
-
 
 ## Fallbacks und Importschutz
 
@@ -77,7 +73,6 @@ Die Datei definiert Dummy-Fallbacks für nicht verfügbare Komponenten:
 - `_dummy_list_company_documents` (leere Liste)
 
 `_generate_offer_pdf_safe` versucht, `pdf_generator.generate_offer_pdf` zu importieren; andernfalls wird der Dummy genutzt. Ähnlich für `pdf_preview`.
-
 
 ## Session State – zentrale Schlüssel und Struktur
 
@@ -108,7 +103,6 @@ Wird intensiv genutzt, sowohl zur UI-Steuerung als auch zur Übergabe an den Gen
 - CRM-bezogen: `_crm_feedback`, `_last_saved_crm_customer_id`, `_last_saved_crm_project_id`, `_crm_expanded`
 - Navigation: `selected_page_key_sui` (z. B. auf `doc_output`/`crm` gesetzt)
 
-
 ## Minimalanforderungen & Datenstatus
 
 Vor UI-Interaktion wird geprüft:
@@ -123,7 +117,6 @@ Vor UI-Interaktion wird geprüft:
 - `"fallback"` → Erzeugt (sofort) ein Info-/Fallback-PDF via `pdf_generator._create_no_data_fallback_pdf` und zeigt Download-Button
 - sonst → normales Rendering/Generierung möglich
 
-
 ## Vorlagen, Presets und Labels
 
 - Admin-Settings Keys: `pdf_title_image_templates`, `pdf_offer_title_templates`, `pdf_cover_letter_templates`, `pdf_offer_presets`.
@@ -134,7 +127,6 @@ Preset-Handling:
 
 - Laden: Sucht per Name und schreibt Auswahl in `pdf_inclusion_options` und `pdf_selected_main_sections`.
 - Speichern: Erzeugt neues Objekt `{name, selections}` und persistiert via `save_admin_setting_func('pdf_offer_presets', json.dumps(...))`.
-
 
 ## Erweiterte Features (Tabs)
 
@@ -160,7 +152,6 @@ Preset-Handling:
 1) Struktur
 
 - Ruft `render_pdf_structure_manager(texts)` auf. Dessen Ergebnis (z. B. Reihenfolge) wird in `pdf_section_order` erwartet und beim Generator übergeben.
-
 
 ## Hauptformular und Generierung
 
@@ -197,7 +188,6 @@ Download & CRM:
   - Ablage eines JSON-Snapshots (`doc_type="project_json"`)
   - Navigationswechsel in die CRM-Ansicht möglich
 
-
 ## Datenkontrakte – Übersicht
 
 Inputs an den Generator (übergeben aus dem UI):
@@ -218,7 +208,6 @@ Wichtige Session/State-Werte für Nebenfunktionen:
 - `live_pricing_calculations.final_price` als Preisanker (siehe Projekt-Konventionen)
 - `pdf_section_order` (Struktur-Manager)
 
-
 ## Edge-Cases und Fehlerbilder
 
 - Admin-Settings liefern falschen Typ (z. B. String statt Liste): robust behandeln, ggf. resetten.
@@ -230,11 +219,9 @@ Wichtige Session/State-Werte für Nebenfunktionen:
 - Fehlende Produkt-Datenblätter/Dateien: Debug-Bereich weist Dateipfade aus.
 - Pfade: `data/company_docs` und `data/product_datasheets` werden relativ zu `cwd` zusammengesetzt.
 
-
 ## TypeScript/Electron-Mapping (Renderer ↔ Main)
 
 Empfohlene Schnittstellen im Renderer (PrimeReact):
-
 
 - State-Schema analog zu `st.session_state`:
   - `PdfInclusionOptions`, `FinancingConfig`, `ChartConfig`, `CustomContentItem` (Union aus `TextItem | ImageItem | TableItem`), `PdfDesignConfig`
@@ -245,15 +232,12 @@ Empfohlene Schnittstellen im Renderer (PrimeReact):
   - `pdfGenerator.generateOfferPdf(payload)` (IPC → Main)
   - `crmService.saveCustomerAndAttachDocs(payload)`
 
-
 Beispieltypen (vereinfacht, TS):
-
 
 - `type CustomContentItem =
   | { type: 'text'; id: string; title: string; content: string; style: 'normal'|'highlight'|'warning'|'info'|'success'; position: 'top'|'middle'|'bottom'|'after_analysis'; created: string }
   | { type: 'image'; id: string; title: string; description?: string; image_data: string; image_format: string; position: 'top'|'middle'|'bottom'|'gallery'; created: string }
   | { type: 'table'; id: string; title: string; headers: string[]; rows: string[][]; position: 'top'|'middle'|'bottom'|'pricing'; created: string }`
-
 
 Payload an Main (vereinfacht):
 
@@ -267,7 +251,6 @@ Payload an Main (vereinfacht):
      sectionsToInclude: string[],
      inclusionOptions: PdfInclusionOptions & { financingConfig?; chartConfig?; customContentItems?; pdfDesignConfig?; customSectionOrder?: string[] }
    }`
-
 
 ## Tests und Backlog
 
@@ -284,7 +267,6 @@ Backlog/Verbesserungen:
 - Einheitliche Validierungsrückgaben zwischen UI und `pdf_generator` (z. B. strukturierte Fehlercodes).
 - Struktur-Manager: Validierung der übergebenen `custom_section_order` gegen `pdf_selected_main_sections`.
 - Optional: Vorschau-Bilder der ersten PDF-Seiten einblenden (wenn `pdf_preview` aktiv).
-
 
 ## Kurz „How to“ für die Nutzung
 

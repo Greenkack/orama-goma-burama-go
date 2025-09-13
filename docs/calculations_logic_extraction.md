@@ -2,7 +2,6 @@
 
 Dieses Dokument extrahiert zu 100% die Logik und Datenflüsse aus `calculations.py` und bereitet die Migration in eine Electron/PrimeReact/TypeScript-Architektur vor. Es dient als „Single Source of Truth“ für Kontrakte (Inputs/Outputs), Nebenwirkungen, Fehlerbilder, Performance-Überlegungen und TS/IPCs.
 
-
 ## Überblick – Aufgaben von calculations.py
 
 - Kern-Berechnungs-Engine für PV-Angebote und Wirtschaftlichkeit
@@ -13,7 +12,6 @@ Dieses Dokument extrahiert zu 100% die Logik und Datenflüsse aus `calculations.
   - Wartungs-/Degradations-Module und Energiepreisvergleich
 - Unterstützende Klassen/Funktionen: Price-Matrix-Parsing + Cache, Formatierer, PVGIS-API, Analyseklassen
 - Session-State-Backup: Ergebnisse werden optional in Streamlit `st.session_state` gespiegelt (Zeitstempel, Backup)
-
 
 ## Externe Abhängigkeiten und Datenquellen
 
@@ -26,7 +24,6 @@ Dieses Dokument extrahiert zu 100% die Logik und Datenflüsse aus `calculations.
 - Produkt-DB (`product_db.get_product_by_id`): Module, Wechselrichter, Speicher und optionale Komponenten (Kostenfelder, Modelle, Leistungsdaten)
 - HTTP: `requests` zur PVGIS API
 - Python: `pandas`, `numpy`, `numpy_financial` (optional, IRR), `math`, `datetime`, `json`
-
 
 ## Öffentliche API – Funktionen, Klassen, Nebenwirkungen
 
@@ -153,14 +150,12 @@ Dieses Dokument extrahiert zu 100% die Logik und Datenflüsse aus `calculations.
 
 Hinweis: Alle numerischen Felder sind robust geglättet (NaN/Inf Checks) und mit Fallbacks versehen.
 
-
 ### get_pvgis_data(lat, lon, peak_power_kwp, tilt, azimuth, system_loss_percent=14.0, texts=None, errors_list=None, debug_mode_enabled=False) -> Optional[Dict]
 
 - Holt PV-Leistungsdaten von PVGIS (Monatswerte `E_m`, Jahreswerte `E_y`, `Yield_y`).
 - Validiert Koordinaten/Parameter, baut GET auf Endpoint `https://re.jrc.ec.europa.eu/api/seriescalc` mit `outputformat=json` und `browser=0`.
 - Fehlerfälle: HTTP/Timeout/Connection/Request/JSON-Decode → stringisierte Fehler in `errors_list`, Rückgabe `None`.
 - Success: `{ monthly_production_kwh: List[12], annual_production_kwh: float, specific_yield_kwh_kwp_pa: float, pvgis_source: str }`.
-
 
 ### Price-Matrix Parsing und Cache
 
@@ -171,7 +166,6 @@ Hinweis: Alle numerischen Felder sind robust geglättet (NaN/Inf Checks) und mit
 - `parse_module_price_matrix_csv(csv_data, errors_list) -> Optional[pd.DataFrame]`
   - `sep=';'`, `decimal=','`, `thousands='.'`, Kommentar „#“, robustes Index-Handling, Typkonvertierung
 
-
 ### Hilfsfunktionen
 
 - `format_kpi_value(value, unit="", na_text_key="data_not_available_short", precision=2, texts_dict=None) -> str`
@@ -179,12 +173,10 @@ Hinweis: Alle numerischen Felder sind robust geglättet (NaN/Inf Checks) und mit
 - `convert_orientation_to_pvgis_azimuth(orientation_text) -> int`
   - Mappt Textausrichtungen (Süd/Ost/West/…) auf PVGIS Azimut (Süd=0, Ost=-90, West=90, Nord=180, Diagonalen etc.)
 
-
 ### Angebotserstellung
 
 - `calculate_offer_details(customer_id: Optional[int]=None, project_data: Optional[Dict]=None) -> Dict`
   - Führt intern `perform_calculations` aus und baut Angebots-Dict mit Kerndaten (Invest, Einsparung, Amortisation, Komponenten)
-
 
 ### Erweiterte Analyse-Klassen (am Dateiende)
 
@@ -200,7 +192,6 @@ Hinweis: Alle numerischen Felder sind robust geglättet (NaN/Inf Checks) und mit
 - `MaintenanceMonitoring`
   - ctor(components, installation_date)
   - `generate_maintenance_schedule()` → nächste Wartungen, Prioritäten, Jahreskosten
-
 
 ### AdvancedCalculationsIntegrator (im Kopfbereich der Datei)
 
@@ -221,7 +212,6 @@ Stellt optionale/erweiterte Analysen bereit. Enthaltene Methoden (Auszug) und R�
 
 Diese Integrator-Methoden sind unabhängig von `perform_calculations`, können aber mit dessen Ergebnissen/Projektparametern gespeist werden.
 
-
 ## Preisbildung – detaillierte Regeln (Matrix + Auf-/Abschläge)
 
 - Matrix-Zeilenwahl: größte Zeile `<= module_quantity`
@@ -237,7 +227,6 @@ Diese Integrator-Methoden sind unabhängig von `perform_calculations`, können a
   - Optionalkomponenten: Map `selected_*_id` → `cost_*_aufpreis_netto`; Summe in `total_optional_components_cost_netto`
 - Summen: `subtotal_netto` → `- one_time_bonus_eur` → `total_investment_netto` → Brutto mit `vat_rate_percent`
 
-
 ## Ertrags-/Verbrauchsmodell und Speicherlogik (Jahr 1)
 
 - Produktion:
@@ -251,7 +240,6 @@ Diese Integrator-Methoden sind unabhängig von `perform_calculations`, können a
     - Laden: bis min(Überschuss, theoretisches Brutto-Limit/Wirkungsgrad), Netto im Speicher = Brutto*`storage_efficiency`
     - Entladen: min(Netto-Ladung, Restverbrauch nach Direktverbrauch)
   - Rest: Einspeisung/Netzbezug
-
 
 ## Mehrjahressimulation und Finanzen
 
@@ -269,7 +257,6 @@ Diese Integrator-Methoden sind unabhängig von `perform_calculations`, können a
   - PR: `specific_annual_yield_kwh_per_kwp` vs. Referenz; fallback auf Default
   - AfA linear und Restwert
   - Alternative Anlage: Endwert bei Zinssatz `alternative_investment_interest_rate_percent`
-
 
 ## Fehlerbehandlung, Edge-Cases, Guards
 
@@ -290,13 +277,11 @@ Diese Integrator-Methoden sind unabhängig von `perform_calculations`, können a
   - Monatliche Verteilungsfaktoren werden validiert und normalisiert; invalid → fallback uniform
 - Session-State nicht vorhanden → Backup übersprungen (silent)
 
-
 ## Integration in UI und PDF
 
 - Analysis-UI konsumiert die Ergebnis-Keys (u. a. Produktionen/Verbräuche, Kosten, KPIs, Simulationen)
 - Chart-Bytes werden hier nur als Platzhalter gesetzt – die UI erstellt/füllt sie
 - PDF-Pipeline nutzt u. a. `anlage_kwp`, `annual_pv_production_kwh`, `total_investment_netto/brutto`, Einspeise-/Kosten-Listen, Simulationen
-
 
 ## TypeScript/Electron Mappings (Services, Interfaces, IPC)
 
@@ -336,7 +321,6 @@ Hinweis: Umlaute in Keys für TS-Modelle ASCII-normalisieren (z. B. `optimale_sp
   - `matrix/parseExcel`|`matrix/parseCsv` → Matrix JSON
   - `finance/npv|irr|lcoe` → Zahlen
 
-
 ## Qualitätssicherung und Performance
 
 - Price-Matrix Cache: Hash-basiert; erneutes Parsen vermeiden
@@ -345,7 +329,6 @@ Hinweis: Umlaute in Keys für TS-Modelle ASCII-normalisieren (z. B. `optimale_sp
 - Quick Gates (lokal prüfbar):
   - Syntax/Lint: Python-Datei validierbar, keine unbenutzten Imports im Doc-Kontext
   - Smoke-Test: `calculate_offer_details()` mit Dummy-Daten liefert sinnvolle Struktur und keine Ausnahmen
-
 
 ## Tests – Empfehlungen (Python/TS)
 
@@ -356,7 +339,6 @@ Hinweis: Umlaute in Keys für TS-Modelle ASCII-normalisieren (z. B. `optimale_sp
 - Simulation: Degradation & EEG-Wechsel nach N Jahren korrekt
 - Konsistenz: Summe Monatswerte = Jahreswerte; Prozentanteile 0..100
 
-
 ## Migrations-Backlog (konkret)
 
 - TS-Modelle für CalculationResult erstellen; Umlaute/Feldnamen vereinheitlichen
@@ -365,12 +347,10 @@ Hinweis: Umlaute in Keys für TS-Modelle ASCII-normalisieren (z. B. `optimale_sp
 - Optional: IRR-Implementierung ohne numpy_financial (Newton-Verfahren) für Node-Seite
 - Fallback-Strategie für PVGIS-Ausfall im Electron-Kontext (Offline-Cache, lokales Profil)
 
-
 ## Anmerkungen zur Terminologie
 
 - „Speicher“: Im Code wird die ausgewählte Kapazität aus `selected_storage_storage_power_kw` gelesen, ist aber eine Energie (kWh). In TS als `storageCapacityKwh` abbilden.
 - Keys mit Umlauten sollten beim TS-Mapping ASCII-normalisiert werden.
-
 
 ## Akzeptanzkriterien (Done-Definition für Migration)
 
